@@ -1,0 +1,111 @@
+#Importing all the neccessary libraries :
+
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
+import time
+import pandas as pd
+import csv
+
+# Defining the function to extract Data: 
+
+def search_users_Data(firstname, lastname):
+
+    # URL of the linkedin login / signup page
+
+    website="https://in.linkedin.com/" 
+
+    # Automation
+
+    driver=webdriver.Chrome()          
+    driver.get(website)
+
+    # Get the email input field from the sign in page
+
+    email=driver.find_element('xpath','//*[@id="session_key"]')
+
+    ##  Enter your email id here  ##
+
+    email.send_keys(" ")                                         
+    password=driver.find_element("id",'session_password')         # Getting the password input field
+
+    ## Enter your linkedin account password here ##
+
+    password.send_keys(" ") 
+
+    # Get the signin button
+                                          
+    signing_in=driver.find_element('xpath',"//button[@data-id='sign-in-form__submit-btn']")  
+    signing_in.click()                                                                       
+    time.sleep(2)
+     
+     # Getting the searchbox of linkedin to search 
+
+    search_box=driver.find_element("xpath",'//input[@aria-label="Search"]')  
+
+    # Entering the firstname and lastname of user's input into the searchbox of linkedin
+
+    search_box.send_keys(firstname,' ',lastname)                                 
+    search_box.send_keys(u'\ue007')                                              
+    time.sleep(5)
+
+    people_btn= driver.find_element('xpath','//*[@id="search-reusables__filters-bar"]/ul/li[1]/button') # finding top 10 search results
+    people_btn.click()
+    time.sleep(2)
+
+    ## Extracting Information  ##
+
+    #Extracting Names
+
+    name_list=[]
+    Names=driver.find_elements('xpath','//span[@dir="ltr"]')
+    for name in Names:
+        name_list.append(name.text)
+
+    # Extracting About information
+
+    about_list=[]
+    about=driver.find_elements("css selector",".entity-result__primary-subtitle")
+    for te in about:
+        about_list.append(te.text)
+
+    # Extracting Locations
+
+    loc_list=[]
+    location=driver.find_elements('css selector','.entity-result__secondary-subtitle')
+    for loc in location:
+        loc_list.append(loc.text)
+
+    # Extracting Mutual Connection Information
+
+    mutual_list=[]
+    connection=driver.find_elements('css selector','.reusable-search-simple-insight')
+    for conn in connection:
+        mutual_list.append(conn.text)
+
+    # Making a dictionary of all the lists i got
+
+    new_dict={
+       "Full Names": name_list,
+       "About":about_list,
+       "Locations":loc_list,
+       "Mutual Connections":mutual_list
+        }
+    
+    # Making a dataframe from the dictionary i have made one step before
+
+    df=pd.DataFrame(new_dict)
+    excel_filename = f"{First_name}_{Last_name}_profiles.xlsx"
+    df.to_excel(excel_filename,index=False)
+    
+#================================================== Input section =========================================#
+    
+# Taking the input from the user: 
+
+First_name=input("Enter firstname")
+Last_name=input('Enter lastname')  
+
+# Calling the script(or function) to extract data from search results: 
+
+search_users_Data(First_name, Last_name)
+
